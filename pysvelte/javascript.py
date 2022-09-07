@@ -2,12 +2,7 @@ import stat
 import subprocess
 import threading
 
-from .vis_paths import PYSVELTE_ROOT, Path
-
-NODE_MODULES = PYSVELTE_ROOT / "node_modules"
-PACKAGE_JSON = PYSVELTE_ROOT / "package.json"
-SRC = PYSVELTE_ROOT / "src"
-DIST = PYSVELTE_ROOT / "dist"
+from .vis_paths import NODE_ROOT, COMPONENTS_DIST, INTERNAL_COMPONENTS_SRC, Path
 
 
 def mtime(path: Path):
@@ -27,18 +22,24 @@ def mtime(path: Path):
 
 def is_npm_install_necessary():
     """Check if npm dependencies are out of date or missing."""
-    if not NODE_MODULES.exists():
+    if not NODE_ROOT / "node_modules".exists():
         return True
-    return mtime(NODE_MODULES) < mtime(PACKAGE_JSON)
+    return mtime(NODE_ROOT / "node_modules") < mtime(NODE_ROOT / "package.json")
 
 
 def install_if_necessary():
     """Install npm modules if they're out of date or missing."""
     if is_npm_install_necessary():
-        print("Running npm install...")
-        subprocess.check_call(["npm", "--prefix", str(PYSVELTE_ROOT), "install"])
+        print("Installing node.js dependencies...")
+        subprocess.check_call(["npm", "--prefix", str(NODE_ROOT), "ci"])
 
 
+# TODO: this looks like it's intended to prevent duplicate concurrent webpack builds
+# but I'm unsure/unconvinced it actually does this.
+# * If we have several entirely different notebook processes this lock won't stop them interfering
+# * If we have one notebook/IPython process, the GIL means only one thread runs at once and notebook
+#   cells run serially and as far as I can tell on a single thread
+# So I think this lock can only cause deadlock (when a rebuild is interrupted) and won't catch actual problems
 vis_build_lock = threading.Lock()
 
 
@@ -49,9 +50,10 @@ def webpack_if_necessary(paths=None):
       paths: Assets to build if necesary. If None (the default) we build all.
     """
     with vis_build_lock:
-        dists = [DIST / p for p in paths] or [DIST]
+        # TODO: this assumes a fixed SRC path
+        dists = [COMPONENTS_DIST / p for p in paths] or [COMPONENTS_DIST]
         stale = any(
-            mtime(dist) < mtime(SRC) or mtime(dist) < mtime(PACKAGE_JSON)
+            mtime(dist) < mtime(INTERNAL_COMPONENTS_SRC) or mtime(dist) < mtime(NODE_ROOT / "package.json")
             for dist in dists
         )
         if stale:
@@ -64,25 +66,23 @@ def webpack_if_necessary(paths=None):
                 env_flag = [f"--env=entry={entries}"]
             else:
                 env_flag = []
-            subprocess.check_call(["npx", "webpack"] + env_flag, cwd=str(PYSVELTE_ROOT))
+            subprocess.check_call(["npx", "webpack"] + env_flag, cwd=str(NODE_ROOT))
 
 
 def get_src_path(name):
-    f = SRC / f"{name}.svelte"
-    if f.exists():
+    if (f := INTERNAL_COMPONENTS_SRC / f"{name}.svelte").exists():
         return f
-    f = SRC / f"{name}/main.svelte"
-    if f.exists():
+    if (f := INTERNAL_COMPONENTS_SRC / f"{name}/main.svelte").exists():
         return f
 
 
 def get_dist_path(name):
-    return DIST / f"{name}.js"
+    return COMPONENTS_DIST / f"{name}.js"
 
 
 def load_dist_path(path):
     webpack_if_necessary([path])
-    dev_path = DIST / path
+    dev_path = COMPONENTS_DIST / path
     if not dev_path.exists():
         msg = f"Could not find the built file '{path}' "
         raise Exception(msg)
@@ -90,16 +90,11 @@ def load_dist_path(path):
         return f.read()
 
 
-def dev_url(host, path):
-    if host[-1] != "/":
-        host = host + "/"
-    return host + path
-
-
 def get_script_tag(path, dev_host=None):
     if not dev_host:
         return f"<script>{load_dist_path(path)}</script>"
     else:
+        dev_url = dev_host + ('/' if dev_host[-1] != '/' else '') + path
         return f"<script src='{dev_url(dev_host, path)}'></script>"
 
 

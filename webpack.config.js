@@ -116,6 +116,7 @@ module.exports = env => ({
             }),
         ],
     },
+    mode: "production",
     // https://webpack.js.org/configuration/target/
     target: 'web',
     // https://webpack.js.org/configuration/output/

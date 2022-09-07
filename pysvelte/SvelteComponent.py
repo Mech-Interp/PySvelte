@@ -10,7 +10,7 @@ from typeguard import typechecked
 from .ExtJsonEncoder import ExtJSONEncoder
 from .html import Html
 from .javascript import get_dist_path, get_src_path
-from .vis_paths import PYSVELTE_ROOT
+from .vis_paths import PYSVELTE_PACKAGE_ROOT, INTERNAL_COMPONENTS_SRC
 
 __all__ = ["SvelteComponent"]
 
@@ -114,6 +114,8 @@ class SvelteComponent:
     framework. It makes reactivity really easy. This class mirrors Svelte components
     we write. Learn more about Svelte: https://svelte.dev/
 
+    TODO: once loading external components works, delete this stuff
+
     We assume that every svelte component is defined in:
         `vis/src/{name}/main.svelte`
 
@@ -129,7 +131,7 @@ class SvelteComponent:
         self.name = name
         self.dev_path = get_dist_path(name)
         src = get_src_path(name)
-        py_src_path = PYSVELTE_ROOT / "src" / f"{name}.py"
+        py_src_path = INTERNAL_COMPONENTS_SRC / f"{name}.py"
 
         if py_src_path.exists():
             self.arg_handler = ArgumentHandler.load_from_py(py_src_path)
@@ -168,11 +170,15 @@ class SvelteComponent:
 
     @staticmethod
     def autogenerate() -> List["SvelteComponent"]:
+        """
+        Finds all Svelte components in the PySvelte package's internal component paths
+        If you want to add custom components outside the library, you need to register them separately
+        """
         components = []
-        for f in PYSVELTE_ROOT.glob("src/*/main.svelte"):
+        for f in INTERNAL_COMPONENTS_SRC.glob("./*/main.svelte"):
             name = str(f).split("/src/")[1].replace("/main.svelte", "")
             components.append(SvelteComponent(name))
-        for f in PYSVELTE_ROOT.glob("src/*.svelte"):
+        for f in INTERNAL_COMPONENTS_SRC.glob("./*.svelte"):
             name = str(f).split("/src/")[1].replace(".svelte", "")
             components.append(SvelteComponent(name))
         return components
