@@ -37,4 +37,3 @@ jobs:
     - name: Jest
       run: yarn test
       working-directory: ${{env.javascript-root}}
-
