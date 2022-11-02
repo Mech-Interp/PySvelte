@@ -54,8 +54,9 @@ setup(
     description="A library for visualising and interpreting model activations within a Jupyter Notebook",
     long_description=open("README.md").read(),
     install_requires=[
-        'einops',
         'datasets',
+        'einops',
+        'filehash',
         'filehash',
         'ipython',
         'jupyterlab',
@@ -64,9 +65,9 @@ setup(
         'pytest',
         'snapshottest',
         'torch',
-        "ipython",
         'tqdm',
         'transformers',
+        "ipython",
         'typeguard'
     ],
     cmdclass={
