@@ -4,7 +4,7 @@ import tinycolor from "tinycolor2";
 
 export enum TokensView {
   DESTINATION_TO_SOURCE = "DESTINATION_TO_SOURCE",
-  SOURCE_TO_DESTINATION = "SOURCE_TO_DESTINATION",
+  SOURCE_TO_DESTINATION = "SOURCE_TO_DESTINATION"
 }
 
 /**
@@ -72,7 +72,7 @@ export function Token({
   meanAttentionAcrossHeads,
   text,
   tokenIndex,
-  tokensView,
+  tokensView
 }: {
   focusedToken?: number;
   focusToken: Dispatch<SetStateAction<number>>;
@@ -114,7 +114,7 @@ export function Token({
         paddingLeft: 5,
         paddingRight: 5,
         // Focussed box shadow
-        boxShadow: isFocused ? "0px 0px 3px 3px rgba(0,0,200,0.4)" : null,
+        boxShadow: isFocused ? "0px 0px 3px 3px rgba(0,0,200,0.4)" : null
       }}
       onClick={() => {
         if (isFocused) {
@@ -123,9 +123,9 @@ export function Token({
           focusToken(tokenIndex);
         }
       }}
-    >
-      {text}
-    </button>
+      // Dangerously set as we want escaped html characters (e.g. ' or ") to be unescaped.
+      dangerouslySetInnerHTML={{ __html: text }}
+    ></button>
   );
 }
 
@@ -144,7 +144,7 @@ export function Tokens({
   focusedToken,
   focusToken,
   tokens,
-  tokensView,
+  tokensView
 }: {
   coloredAttention: Tensor4D;
   focusedHead?: number;

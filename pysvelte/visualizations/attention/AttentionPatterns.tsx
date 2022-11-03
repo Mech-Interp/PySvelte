@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import ReactDOM from "react-dom";
 import { einsum, Rank, tensor, Tensor3D, Tensor4D } from "@tensorflow/tfjs";
 import tinycolor from "tinycolor2";
-import PropTypes from "prop-types";
 import reactToWebComponent from "react-to-webcomponent";
 import { AttentionImage } from "./components/AttentionImage";
 import { Tokens, TokensView } from "./components/AttentionTokens";
@@ -30,7 +29,7 @@ import { Tokens, TokensView } from "./components/AttentionTokens";
  */
 export function colorAttentionTensors(attentionInput: number[][][]): Tensor4D {
   // Create a TensorFlow tensor from the attention data
-  const attentionTensor = tensor<Rank.R3>(attentionInput); // [dest_tokens x source_tokens x heads]
+  const attentionTensor = tensor<Rank.R3>(attentionInput, undefined, "float32"); // [dest_tokens x source_tokens x heads]
 
   // Rearrange to [heads x dest_tokens x source_tokens]
   const attention = einsum(
@@ -67,14 +66,10 @@ export function AttentionPatterns({
   attention
 }: {
   /** Array of tokens e.g. ["Hello", "my", "name", "is"...] (JSON stringified) */
-  tokens: string;
+  tokens: string[];
   /** Attention input as [dest_tokens x source_tokens x heads] (JSON stringified) */
-  attention: string;
+  attention: number[][][];
 }) {
-  // JSON parse the props
-  const tokensParsed = JSON.parse(tokens) as string[];
-  const attentionParsed = JSON.parse(attention) as number[][][];
-
   // State for which head/token is focused
   const [selectedHead, selectHead] = useState<number>(null);
   const [hoveredHead, hoverHead] = useState<number>(null);
@@ -85,8 +80,8 @@ export function AttentionPatterns({
 
   // Color the attention values (by head)
   const coloredAttention = useMemo(
-    () => colorAttentionTensors(attentionParsed),
-    [attentionParsed]
+    () => colorAttentionTensors(attention),
+    [attention]
   );
   const heads = coloredAttention.unstack<Tensor3D>(0);
 
@@ -172,7 +167,7 @@ export function AttentionPatterns({
             focusedHead={focusedHead}
             focusedToken={selectedToken}
             focusToken={selectToken}
-            tokens={tokensParsed}
+            tokens={tokens}
             tokensView={tokensView}
           />
         </div>
@@ -182,18 +177,16 @@ export function AttentionPatterns({
 }
 
 /**
- * Run-time type checking
- */
-AttentionPatterns.propTypes = {
-  tokens: PropTypes.string.isRequired,
-  attention: PropTypes.string.isRequired
-};
-
-/**
  * Convert to a web component
  */
 export const CustomVisualization = reactToWebComponent(
-  AttentionPatterns,
+  AttentionPatterns as any,
   React as any,
-  ReactDOM as any
+  ReactDOM as any,
+  {
+    props: {
+      tokens: Array,
+      attention: Array
+    }
+  }
 );

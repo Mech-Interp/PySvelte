@@ -1,9 +1,10 @@
+import html
 import json
 from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
-from pysvelte import build, html
+from pysvelte import build, html_wrapper
 
 
 def AttentionPatterns(
@@ -11,7 +12,7 @@ def AttentionPatterns(
     attention: np.ndarray,
     # info_weighted: Optional[np.ndarray] = None,
     # head_labels: Optional[str] = None
-) -> html.Html:
+) -> html_wrapper.Html:
     """Visualize the attention patterns for multiple attention heads.
 
     This component is used to visualize attention patterns from a Transformer
@@ -53,11 +54,14 @@ def AttentionPatterns(
     #         attention.shape == info_weighted.shape
     #     ), "info_weighted must be the same shape as attention"
 
+    # Encode twice (as Jupyter decodes once before printing)
+    escaped_tokens = [html.escape(html.escape(token)) for token in tokens]
+
     props: dict = {
-        "tokens": json.dumps(tokens),
+        "tokens": json.dumps(escaped_tokens),
         "attention": json.dumps(attention.tolist())
     }
-
+    
     # if info_weighted:
     #     props.info_weighted = json.dumps(  # type: ignore
     #         info_weighted.tolist())
