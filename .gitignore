@@ -1,3 +1,4 @@
 dist
 node_modules
+pysvelte/node_modules
 \.eggs
