@@ -8,22 +8,27 @@ beforeAll(() => {
   setBackend("cpu");
 });
 
+// Input with 2 tokens, 2 heads
+const mockAttention = [
+  [
+    [1, 0],
+    [0.5, 0.5]
+  ],
+  [
+    [1, 0],
+    [0.5, 0.5]
+  ]
+];
+
 describe("colorAttentionTensors", () => {
   it("creates a tensor of the correct shape", () => {
-    // Input with 2 tokens, 2 heads
-    const input = [
-      [
-        [1, 0],
-        [0.5, 0.5]
-      ],
-      [
-        [1, 0],
-        [0.5, 0.5]
-      ]
-    ];
-
-    const res = colorAttentionTensors(input);
+    const res = colorAttentionTensors(mockAttention);
     expect(res.shape).toEqual([2, 2, 2, 3]);
+  });
+
+  it("creates colors for heads matching the snapshot", () => {
+    const res = colorAttentionTensors(mockAttention);
+    expect(res.arraySync()).toMatchSnapshot();
   });
 });
 
