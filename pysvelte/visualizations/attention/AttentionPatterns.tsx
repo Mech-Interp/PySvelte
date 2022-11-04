@@ -5,6 +5,7 @@ import tinycolor from "tinycolor2";
 import reactToWebComponent from "react-to-webcomponent";
 import { AttentionImage } from "./components/AttentionImage";
 import { Tokens, TokensView } from "./components/AttentionTokens";
+import { useHoverLock } from "./components/useHoverLock";
 
 /**
  * Color the attention values by heads
@@ -70,10 +71,23 @@ export function AttentionPatterns({
   /** Attention input as [dest_tokens x source_tokens x heads] (JSON stringified) */
   attention: number[][][];
 }) {
-  // State for which head/token is focused
-  const [selectedHead, selectHead] = useState<number>(null);
-  const [hoveredHead, hoverHead] = useState<number>(null);
-  const [selectedToken, selectToken] = useState<number>(null);
+  // Attention head focussed state
+  const {
+    focused: focusedHead,
+    onClick: onClickHead,
+    onMouseEnter: onMouseEnterHead,
+    onMouseLeave: onMouseLeaveHead
+  } = useHoverLock();
+
+  // State for which token is focussed
+  const {
+    focused: focussedToken,
+    onClick: onClickToken,
+    onMouseEnter: onMouseEnterToken,
+    onMouseLeave: onMouseLeaveToken
+  } = useHoverLock();
+
+  // State for the token view type
   const [tokensView, setTokensView] = useState<TokensView>(
     TokensView.DESTINATION_TO_SOURCE
   );
@@ -91,7 +105,6 @@ export function AttentionPatterns({
   const meanAttentionAcrossHeads = coloredAttention.mean(0);
 
   // Get the focused head based on the state (selected/hovered)
-  const focusedHead = selectedHead ?? hoveredHead ?? null;
   const focusedAttention =
     focusedHead !== null ? heads[focusedHead] : meanAttentionAcrossHeads;
 
@@ -119,19 +132,9 @@ export function AttentionPatterns({
                   margin: 0,
                   marginRight: 15
                 }}
-                onClick={() => {
-                  if (selectedHead === headNumber) {
-                    selectHead(null);
-                  } else {
-                    selectHead(headNumber);
-                  }
-                }}
-                onMouseEnter={() => {
-                  hoverHead(headNumber);
-                }}
-                onMouseLeave={() => {
-                  hoverHead(null);
-                }}
+                onClick={() => onClickHead(headNumber)}
+                onMouseEnter={() => onMouseEnterHead(headNumber)}
+                onMouseLeave={onMouseLeaveHead}
               >
                 <AttentionImage
                   coloredAttention={head}
@@ -165,8 +168,10 @@ export function AttentionPatterns({
           <Tokens
             coloredAttention={coloredAttention}
             focusedHead={focusedHead}
-            focusedToken={selectedToken}
-            focusToken={selectToken}
+            focusedToken={focussedToken}
+            onClickToken={onClickToken}
+            onMouseEnterToken={onMouseEnterToken}
+            onMouseLeaveToken={onMouseLeaveToken}
             tokens={tokens}
             tokensView={tokensView}
           />

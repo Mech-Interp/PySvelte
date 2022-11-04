@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React from "react";
 import { Rank, Tensor, Tensor3D, Tensor4D } from "@tensorflow/tfjs";
 import tinycolor from "tinycolor2";
 
@@ -68,14 +68,18 @@ export function getTokensToAverage(
  */
 export function Token({
   focusedToken,
-  focusToken,
+  onClickToken,
+  onMouseEnterToken,
+  onMouseLeaveToken,
   meanAttentionAcrossHeads,
   text,
   tokenIndex,
   tokensView
 }: {
   focusedToken?: number;
-  focusToken: Dispatch<SetStateAction<number>>;
+  onClickToken: (e: number) => void;
+  onMouseEnterToken: (e: number) => void;
+  onMouseLeaveToken: () => void;
   meanAttentionAcrossHeads: Tensor3D;
   text: string;
   tokenIndex: number;
@@ -116,16 +120,12 @@ export function Token({
         // Focussed box shadow
         boxShadow: isFocused ? "0px 0px 3px 3px rgba(0,0,200,0.4)" : null
       }}
-      onClick={() => {
-        if (isFocused) {
-          focusToken(null);
-        } else {
-          focusToken(tokenIndex);
-        }
-      }}
-      // Dangerously set as we want escaped html characters (e.g. ' or ") to be unescaped.
-      dangerouslySetInnerHTML={{ __html: text }}
-    ></button>
+      onClick={() => onClickToken(tokenIndex)}
+      onMouseEnter={() => onMouseEnterToken(tokenIndex)}
+      onMouseLeave={onMouseLeaveToken}
+    >
+      {text}
+    </button>
   );
 }
 
@@ -142,14 +142,18 @@ export function Tokens({
   coloredAttention,
   focusedHead,
   focusedToken,
-  focusToken,
+  onClickToken,
+  onMouseEnterToken,
+  onMouseLeaveToken,
   tokens,
   tokensView
 }: {
   coloredAttention: Tensor4D;
   focusedHead?: number;
   focusedToken?: number;
-  focusToken: Dispatch<SetStateAction<number>>;
+  onClickToken: (e: number) => void;
+  onMouseEnterToken: (e: number) => void;
+  onMouseLeaveToken: () => void;
   tokens: string[];
   tokensView: TokensView;
 }) {
@@ -167,7 +171,9 @@ export function Tokens({
       {tokens.map((text, tokenIndex) => (
         <Token
           focusedToken={focusedToken}
-          focusToken={focusToken}
+          onClickToken={onClickToken}
+          onMouseEnterToken={onMouseEnterToken}
+          onMouseLeaveToken={onMouseLeaveToken}
           key={tokenIndex}
           meanAttentionAcrossHeads={meanAttentionAcrossHeads}
           text={text}
