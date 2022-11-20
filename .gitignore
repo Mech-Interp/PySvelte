@@ -2,3 +2,6 @@ dist
 node_modules
 pysvelte/node_modules
 \.eggs
+*\.pyc
+PySvelte\.egg-info
+pysvelte/\.build
