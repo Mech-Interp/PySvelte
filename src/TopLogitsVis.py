@@ -7,7 +7,13 @@ Tensor = Union[np.ndarray, torch.Tensor]
 
 
 def init(
-    pos_logit_tokens: List[str], pos_logit_values: Tensor, neg_logit_tokens: List[str], neg_logit_values: Tensor, default_display=10, max_display=10, name="", 
+    pos_logit_tokens: List[str],
+    pos_logit_values: Tensor,
+    neg_logit_tokens: List[str],
+    neg_logit_values: Tensor,
+    default_display=10,
+    max_display=10,
+    name="",
 ):
     """Visualize the activation patterns over the tokens in a text.
 

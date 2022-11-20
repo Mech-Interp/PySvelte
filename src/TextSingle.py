@@ -6,9 +6,7 @@ import torch
 Tensor = Union[np.ndarray, torch.Tensor]
 
 
-def init(
-    tokens: List[str], activations: Tensor, neuron_name=""
-):
+def init(tokens: List[str], activations: Tensor, neuron_name=""):
     """Visualize the activation patterns over the tokens in a text.
 
     Args:
